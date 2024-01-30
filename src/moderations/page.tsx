@@ -9,6 +9,8 @@ import type { moncomptepro_pg_Context } from ":database:moncomptepro/middleware"
 import { app_hc } from ":hc";
 import { button } from ":ui/button";
 import { row } from ":ui/table";
+import { tag, tag_group, toggle_pressed } from ":ui/tag";
+import type { Child } from "hono/jsx";
 import { useRequestContext } from "hono/jsx-renderer";
 import { z } from "zod";
 import { moderation_type_to_emoji } from "./moderation_type_to_emoji";
@@ -125,6 +127,11 @@ function Filter({ search }: { search: Search }) {
       </div>
       <div class="fr-fieldset__element">
         <div class="fr-checkbox-group">
+          <FilterRadioTagGroup />
+        </div>
+      </div>
+      <div class="fr-fieldset__element">
+        <div class="fr-checkbox-group">
           <input
             _="on click set @value to my checked"
             id={NON_VERIFIED_DOMAIN_INPUT_ID}
@@ -139,6 +146,77 @@ function Filter({ search }: { search: Search }) {
         </div>
       </div>
     </form>
+  );
+}
+
+function FilterRadioTagGroup() {
+  const base = tag_group({});
+  type filter_value = "" | "to_process" | "processed" | "non_verified";
+  const value = "" as filter_value;
+  const sync_input = (value: filter_value) => `
+  on click
+    remove @aria-pressed from the closest parent <button/>
+    put "${value}" into (the previous <input/>) @value
+  `;
+  return (
+    <>
+      <input type="hidden" value={value} />
+      <ul class={base}>
+        <li>
+          <button
+            type="button"
+            class={tag()}
+            _={[sync_input(""), toggle_pressed].join("\nend\n")}
+            {...(value === "" ? { "aria-pressed": "true" } : {})}
+          >
+            Tous les comptes
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            class={tag()}
+            _={[sync_input("to_process"), toggle_pressed].join("\nend\n")}
+            {...(value === "to_process" ? { "aria-pressed": "true" } : {})}
+          >
+            Comptes à traiter
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            class={tag()}
+            _={[sync_input("non_verified"), toggle_pressed].join("\nend\n")}
+            {...(value === "non_verified" ? { "aria-pressed": "true" } : {})}
+          >
+            Non vérifiés
+          </button>
+        </li>
+      </ul>
+    </>
+  );
+}
+function FilterCheckboxTag(
+  props: Hono.InputHTMLAttributes & { children: Child },
+) {
+  const { children, ...other_props } = props;
+  const base = tag({});
+  const sync_input = `
+  on click
+    put @aria-pressed into (the previous <input/>) @value
+  `;
+  return (
+    <div class="fr-checkbox-group">
+      <input type="checkbox" {...other_props} />
+      <button
+        type="button"
+        class={base}
+        _={[toggle_pressed, sync_input].join("\nend\n")}
+        aria-pressed="true"
+      >
+        {children}
+      </button>
+    </div>
   );
 }
 
