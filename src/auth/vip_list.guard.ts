@@ -15,7 +15,7 @@ export interface UserInfo_Context extends Env {
 
 //
 
-export function vip_list_guard<E extends Env = any>({
+export function vip_list_guard({
   vip_list,
 }: {
   vip_list: string[];

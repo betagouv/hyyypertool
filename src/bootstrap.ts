@@ -3,7 +3,6 @@
 import { csp_headers, type Csp_Context } from ":common/csp_headers";
 import env from ":common/env";
 // import { sentry, type Sentry_Context } from ":common/sentry";
-import { vip_list_guard } from ":auth/vip_list.guard";
 import { hyyyyyypertool_session } from ":common/session";
 import { moncomptepro_pg_database } from ":database:moncomptepro/middleware";
 import legacy from ":legacy/route";
@@ -51,10 +50,6 @@ const app = new Hono<Csp_Context>()
   .use("*", hyyyyyypertool_session)
   .route("", welcome_router)
   .use("*", moncomptepro_pg_database({ connectionString: env.DATABASE_URL }))
-  .use(
-    "/moderations/*",
-    vip_list_guard({ vip_list: env.ALLOWED_USERS.split(",") }),
-  )
   .route("/moderations", moderations_router)
   .route("", legacy)
   .notFound(async ({ html, var: { nonce } }) => {

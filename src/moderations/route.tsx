@@ -1,7 +1,8 @@
 //
 
-import type { UserInfo_Context } from ":auth/vip_list.guard";
+import { vip_list_guard, type UserInfo_Context } from ":auth/vip_list.guard";
 import type { Csp_Context } from ":common/csp_headers";
+import env from ":common/env";
 import { Pagination_Schema } from ":common/schema";
 import { Moderations_Page, Search_Schema } from ":moderations/page";
 import {
@@ -52,5 +53,6 @@ const moderations_page_route = new Hono<UserInfo_Context & Csp_Context>()
 
 //
 export const moderations_router = new Hono()
+  .use("*", vip_list_guard({ vip_list: env.ALLOWED_USERS.split(",") }))
   .route("", moderations_page_route)
   .route("/:id", moderation_router);
