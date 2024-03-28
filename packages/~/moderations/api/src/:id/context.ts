@@ -48,13 +48,15 @@ export async function get_moderation(
     with: {
       organizations: {
         columns: {
+          authorized_email_domains: true,
           cached_code_postal: true,
           cached_etat_administratif: true,
+          cached_libelle_activite_principale: true,
           cached_libelle_categorie_juridique: true,
           cached_libelle_tranche_effectif: true,
           cached_libelle: true,
           cached_tranche_effectifs: true,
-          cached_libelle_activite_principale: true,
+          external_authorized_email_domains: true,
           id: true,
           siret: true,
         },

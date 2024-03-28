@@ -6,6 +6,7 @@ import { fieldset } from "@~/app.ui/form";
 import { hx_urls } from "@~/app.urls";
 import { Moderation_Type_Schema } from "@~/moderations.lib/Moderation_Type";
 import { useContext } from "hono/jsx";
+import { match } from "ts-pattern";
 import { FORM_SCHEMA } from "./$procedures/validate";
 import { Desicison_Context } from "./Desicison_Context";
 import { ModerationPage_Context } from "./context";
@@ -16,7 +17,10 @@ export function Member_Valid() {
   const { $accept, $add_domain, $decision_form } =
     useContext(Desicison_Context);
   const { moderation } = useContext(ModerationPage_Context);
-  const { base, element } = fieldset();
+  const { base, element, legend } = fieldset();
+  const {
+    users: { given_name },
+  } = moderation;
 
   return (
     <form
@@ -37,16 +41,9 @@ export function Member_Valid() {
       hx-include={hx_include([$add_domain])}
       hx-swap="none"
     >
+      <LinkWithOrganization />
+      <OrganizationDomain />
       <fieldset class={base()}>
-        <div class={element()}>
-          <AddDomain />
-        </div>
-        <div class={element()}>
-          <AddAsMemberInternal />
-        </div>
-        <div class={element()}>
-          <AddAsMemberExternal />
-        </div>
         <div class={element()}>
           <SendNotification />
         </div>
@@ -58,6 +55,139 @@ export function Member_Valid() {
       </fieldset>
     </form>
   );
+}
+
+function LinkWithOrganization() {
+  const { $add_as_internal_member, $add_as_external_member } =
+    useContext(Desicison_Context);
+  const { base, element, legend } = fieldset();
+  const {
+    moderation: {
+      users: { given_name },
+    },
+  } = useContext(ModerationPage_Context);
+  return (
+    <fieldset class={base()}>
+      <legend class={legend({ className: "font-bold" })}>
+        Quel est son lien avec l'organisation ?
+      </legend>
+      <div class={element({ inline: true })}>
+        <div class="fr-radio-group">
+          <input
+            id={$add_as_internal_member}
+            name={FORM_SCHEMA.keyof().Enum.add_member}
+            required
+            type="radio"
+            value={
+              FORM_SCHEMA.shape.add_member.removeDefault().Enum.AS_INTERNAL
+            }
+          />
+          <label class="fr-label !flex-row" for={$add_as_internal_member}>
+            <span class="mx-1 capitalize">{given_name}</span> est{" "}
+            <b class="mx-1">interne</b> à l'organisation 🧑‍💼
+          </label>
+        </div>
+      </div>
+      <div class={element({ inline: true })}>
+        <div class="fr-radio-group">
+          <input
+            id={$add_as_external_member}
+            name={FORM_SCHEMA.keyof().Enum.add_member}
+            required
+            type="radio"
+            value={
+              FORM_SCHEMA.shape.add_member.removeDefault().Enum.AS_EXTERNAL
+            }
+          />
+          <label class="fr-label !flex-row" for={$add_as_external_member}>
+            <span class="mx-1 capitalize">{given_name}</span> est{" "}
+            <b class="mx-1">externe</b> à l'organisation 👷
+          </label>
+        </div>
+      </div>
+    </fieldset>
+  );
+}
+
+function OrganizationDomain() {
+  const { $add_as_internal_member, $add_as_external_member } =
+    useContext(Desicison_Context);
+  const { base, element, legend } = fieldset();
+  const {
+    domain,
+    moderation: {
+      users: { given_name },
+      organizations: {
+        authorized_email_domains,
+        external_authorized_email_domains,
+      },
+    },
+  } = useContext(ModerationPage_Context);
+
+  const is_already_internal_domain = authorized_email_domains.includes(domain);
+  const is_already_external_domain =
+    external_authorized_email_domains.includes(domain);
+  const is_known_domain =
+    is_already_internal_domain || is_already_external_domain;
+
+  return match({
+    is_already_internal_domain,
+    is_already_external_domain,
+    is_known_domain,
+  })
+    .with({ is_already_internal_domain: true }, () => (
+      <fieldset class={base()}>
+        <b class="mx-1">{domain}</b> est un domaine interne à l'organisation 🏢
+      </fieldset>
+    ))
+    .with({ is_already_external_domain: true }, () => (
+      <fieldset class={base()}>
+        <b class="mx-1">{domain}</b> est un domaine externe à l'organisation 🏗️
+      </fieldset>
+    ))
+    .otherwise(() => {
+      return (
+        <fieldset class={base()}>
+          <legend class={legend({ className: "font-bold" })}>
+            Le domaine {domain} est-il en lien avec l'organisation ?
+          </legend>
+          <div class={element({ inline: true })}>
+            <div class="fr-radio-group">
+              <input
+                id={"$add_as_internal_member"}
+                name={"FORM_SCHEMA.keyof().Enum.add_member"}
+                required
+                type="radio"
+                value={
+                  FORM_SCHEMA.shape.add_member.removeDefault().Enum.AS_INTERNAL
+                }
+              />
+              <label class="fr-label !flex-row" for={"$add_as_internal_member"}>
+                <span class="mx-1 capitalize">{domain}</span> est{" "}
+                <b class="mx-1">interne</b> à l'organisation 🧑‍💼
+              </label>
+            </div>
+          </div>
+          <div class={element({ inline: true })}>
+            <div class="fr-radio-group">
+              <input
+                id={"$add_as_external_member"}
+                name={"FORM_SCHEMA.keyof().Enum.add_member"}
+                required
+                type="radio"
+                value={
+                  FORM_SCHEMA.shape.add_member.removeDefault().Enum.AS_EXTERNAL
+                }
+              />
+              <label class="fr-label !flex-row" for={"$add_as_external_member"}>
+                <span class="mx-1 capitalize">{domain}</span> est{" "}
+                <b class="mx-1">externe</b> à l'organisation 👷
+              </label>
+            </div>
+          </div>
+        </fieldset>
+      );
+    });
 }
 
 function SendNotification() {
@@ -115,9 +245,7 @@ function AddAsMemberInternal() {
     },
     organization_member,
   } = useContext(ModerationPage_Context);
-  const is_already_internal_member = organization_member
-    ? organization_member.is_external === false
-    : true;
+  const is_already_internal_member = organization_member?.is_external === false;
   return (
     <div class="fr-radio-group">
       <input
