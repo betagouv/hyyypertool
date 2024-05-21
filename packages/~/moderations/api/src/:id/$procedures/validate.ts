@@ -12,6 +12,7 @@ import { MODERATION_EVENTS } from "@~/moderations.lib/event";
 import { member_join_organization } from "@~/moderations.lib/usecase/member_join_organization";
 import { schema } from "@~/moncomptepro.database";
 import { send_moderation_processed_email } from "@~/moncomptepro.lib/index";
+import { Verification_Type_Schema } from "@~/moncomptepro.lib/verification_type";
 import { add_verified_domain } from "@~/organizations.lib/usecase/add_verified_domain";
 import { to } from "await-to-js";
 import consola from "consola";
@@ -24,9 +25,10 @@ import { comment_message } from "./comment_message";
 //
 
 export const FORM_SCHEMA = z.object({
-  add_domain: z.string().default("false").pipe(z_coerce_boolean),
+  add_domain: z.enum(["AS_INTERNAL", "AS_EXTERNAL"]).optional(),
   add_member: z.enum(["AS_INTERNAL", "AS_EXTERNAL", "NOPE"]).default("NOPE"),
   send_notitfication: z.string().default("false").pipe(z_coerce_boolean),
+  verification_type: Verification_Type_Schema.optional(),
 });
 
 //
@@ -42,14 +44,22 @@ export default new Hono<MonComptePro_Pg_Context & UserInfo_Context>().patch(
     var: { moncomptepro_pg, userinfo, sentry },
   }) => {
     const { id } = req.valid("param");
-    const { add_domain, add_member, send_notitfication } = req.valid("form");
+    const { add_domain, add_member, send_notitfication, verification_type } =
+      req.valid("form");
 
     const moderation = await moncomptepro_pg.query.moderations.findFirst({
       columns: { comment: true, organization_id: true, user_id: true },
       with: { users: { columns: { email: true } } },
       where: eq(schema.moderations.id, id),
     });
+    console.log({
+      add_domain,
+      add_member,
+      send_notitfication,
+      verification_type,
+    });
 
+    if (1) return text("OK", 200);
     if (!moderation) return notFound();
 
     const {

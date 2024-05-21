@@ -26,7 +26,7 @@ export async function get_organization_member(
   { user_id, organization_id }: { user_id: number; organization_id: number },
 ) {
   return pg.query.users_organizations.findFirst({
-    columns: { is_external: true },
+    columns: { is_external: true, verification_type: true },
     where: and(
       eq(schema.users_organizations.user_id, user_id),
       eq(schema.users_organizations.organization_id, organization_id),
@@ -48,13 +48,15 @@ export async function get_moderation(
     with: {
       organizations: {
         columns: {
+          authorized_email_domains: true,
           cached_code_postal: true,
           cached_etat_administratif: true,
+          cached_libelle_activite_principale: true,
           cached_libelle_categorie_juridique: true,
           cached_libelle_tranche_effectif: true,
           cached_libelle: true,
           cached_tranche_effectifs: true,
-          cached_libelle_activite_principale: true,
+          external_authorized_email_domains: true,
           id: true,
           siret: true,
         },
