@@ -125,6 +125,15 @@ function Nav() {
             Organisations
           </a>
         </li>
+        <li class="fr-nav__item">
+          <a
+            class="fr-nav__link"
+            href={urls.organizations.domains.$url().pathname}
+            target="_self"
+          >
+            Domaines à verifier
+          </a>
+        </li>
       </ul>
     </nav>
   );
