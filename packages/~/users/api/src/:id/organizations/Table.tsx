@@ -75,7 +75,7 @@ export async function UserOrganizationTable() {
 
 //
 
-export function Row() {
+function Row() {
   const {
     authorized_email_domains,
     cached_code_officiel_geographique,

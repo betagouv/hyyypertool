@@ -16,7 +16,11 @@ export async function get_duplicate_moderations(
   },
 ) {
   return pg
-    .select()
+    .select({
+      id: schema.moderations.id,
+      moderated_at: schema.moderations.moderated_at,
+      ticket_id: schema.moderations.ticket_id,
+    })
     .from(schema.moderations)
     .where(
       and(

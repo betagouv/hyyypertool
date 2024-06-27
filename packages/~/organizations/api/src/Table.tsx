@@ -1,107 +1,118 @@
 //
 
+import { hx_include } from "@~/app.core/htmx";
+import { Foot } from "@~/app.ui/hx_table";
 import { LocalTime } from "@~/app.ui/time/LocalTime";
-import { urls } from "@~/app.urls";
-import { type Organization } from "@~/moncomptepro.database";
-import { createContext, useContext } from "hono/jsx";
-import { match } from "ts-pattern";
-import { ORGANIZATIONS_TABLE_ID } from "./page";
+import { hx_urls, urls } from "@~/app.urls";
+import { useContext } from "hono/jsx";
+import { OrganizationRow_Context, OrganizationTable_Context } from "./context";
 
 //
 
-const fields = [
-  "cached_libelle",
-  "siret",
-  "authorized_email_domains",
-  "external_authorized_email_domains",
-  "verified_email_domains",
-  "cached_code_officiel_geographique",
-] as const;
+export async function Table() {
+  const {
+    $page_input,
+    $search_input,
+    $table,
+    pagination,
+    query_organizations_collection,
+  } = useContext(OrganizationTable_Context);
 
-export const Table_Context = createContext({
-  page: 1,
-  take: 10,
-  count: 0,
-});
+  const hx_organizations_query_props = {
+    ...hx_urls.organizations.$get({
+      query: {},
+    }),
+    "hx-include": hx_include([$page_input, $search_input]),
+    "hx-replace-url": true,
+    "hx-select": `#${$table} > table`,
+    "hx-target": `#${$table}`,
+  };
 
-export function Table({ organizations }: { organizations: Organization[] }) {
-  const { page, take, count } = useContext(Table_Context);
-  const page_index = page - 1;
-  const last_page = Math.floor(count / take) + 1;
+  const { organizations, count } = await query_organizations_collection;
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>Date de création</th>
-          {fields.map((name) => (
-            <th class="max-w-32 break-words">{name}</th>
-          ))}
-
-          <th>ID</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {organizations.map((organization) => (
+    <div id={$table} class="fr-table [&>table]:table">
+      <table>
+        <thead>
           <tr>
-            <td>
-              <LocalTime date={organization.created_at} />
-            </td>
-            {fields.map((name) => (
-              <td class="break-words">
-                {match(organization[name])
-                  .when(
-                    () => name === "authorized_email_domains",
-                    () => organization.authorized_email_domains.join(", "),
-                  )
-                  .otherwise((value) => value)}
-              </td>
-            ))}
+            <th>Date de création</th>
+            <th class="break-words">Libellé</th>
+            <th class="break-words">Siret</th>
+            <th class="max-w-32 break-words">Domain email authorizé</th>
+            <th class="max-w-32 break-words">Domain email externe authorizé</th>
+            <th class="max-w-32 break-words">Domain email vérifié</th>
 
-            <td>{organization.id}</td>
-            <td>
-              <a
-                class="p-3"
-                href={
-                  urls.organizations[":id"].$url({
-                    param: {
-                      id: organization.id.toString(),
-                    },
-                  }).pathname
-                }
-              >
-                ➡️
-              </a>
-            </td>
+            <th class="max-w-32 break-words">Code géographique officiel</th>
+
+            <th>ID</th>
+            <th></th>
           </tr>
-        ))}
-      </tbody>
+        </thead>
+        <tbody>
+          {organizations.map((organization) => (
+            <OrganizationRow_Context.Provider value={organization}>
+              <Row />
+            </OrganizationRow_Context.Provider>
+          ))}
+        </tbody>
 
-      <tfoot>
-        <tr>
-          <th scope="row">Showing </th>
-          <td colspan={2}>
-            {page_index * count}-{page_index * count + count} of {count}
-          </td>
-          <td colspan={3} class="inline-flex justify-center">
-            <input
-              class="text-right"
-              hx-get={urls.organizations.$url().pathname}
-              hx-replace-url="true"
-              // hx-include={`#${SEARCH_EMAIL_INPUT_ID}`}
-              hx-select={`#${ORGANIZATIONS_TABLE_ID} > table`}
-              hx-target={`#${ORGANIZATIONS_TABLE_ID}`}
-              hx-trigger="input changed delay:2s"
-              id="page"
-              name="page"
-              type="number"
-              value={String(page)}
-            />
-            <span> of {last_page}</span>
-          </td>
-        </tr>
-      </tfoot>
-    </table>
+        <Foot
+          count={count}
+          hx_query_props={hx_organizations_query_props}
+          id={$page_input}
+          pagination={pagination}
+        />
+      </table>
+    </div>
+  );
+}
+
+//
+
+function Row() {
+  const {
+    authorized_email_domains,
+    cached_code_officiel_geographique,
+    cached_libelle,
+    created_at,
+    external_authorized_email_domains,
+    id,
+    siret,
+    verified_email_domains,
+  } = useContext(OrganizationRow_Context);
+
+  return (
+    <tr>
+      <td>
+        <LocalTime date={created_at} />
+      </td>
+      <td class="max-w-32 break-words">{cached_libelle}</td>
+      <td>{siret}</td>
+      <td class="max-w-32 break-words">
+        {authorized_email_domains.join(", ")}
+      </td>
+      <td class="max-w-32 break-words">
+        {external_authorized_email_domains.join(", ")}
+      </td>
+      <td class="max-w-32 break-words">{verified_email_domains.join(", ")}</td>
+
+      <td>{cached_code_officiel_geographique}</td>
+
+      <td>{id}</td>
+      <td>
+        <a
+          class="p-3"
+          href={
+            urls.organizations[":id"].$url({
+              param: {
+                id: id.toString(),
+              },
+            }).pathname
+          }
+        >
+          ➡️
+        </a>
+      </td>
+    </tr>
   );
 }

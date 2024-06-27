@@ -11,6 +11,9 @@
       "default": "./src/*.ts"
     }
   },
+  "scripts": {
+    "test": "bun test"
+  },
   "dependencies": {
     "@~/moncomptepro.database": "workspace:*",
     "drizzle-orm": "0.31.2"

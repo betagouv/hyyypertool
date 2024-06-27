@@ -21,7 +21,7 @@ export default new Hono<MonComptePro_Pg_Context>()
     "/",
     zValidator("param", Entity_Schema),
     zValidator("query", Pagination_Schema.extend({ describedby: z.string() })),
-    async function ({ render, req }) {
+    async function GET({ render, req }) {
       const { id: organization_id } = req.valid("param");
       const { describedby, page, page_size } = req.valid("query");
 

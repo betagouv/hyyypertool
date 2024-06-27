@@ -24,7 +24,18 @@ export function get_organizations_list(
 
   return pg.transaction(async function organization_with_count() {
     const organizations = await pg
-      .select()
+      .select({
+        authorized_email_domains: schema.organizations.authorized_email_domains,
+        cached_code_officiel_geographique:
+          schema.organizations.cached_code_officiel_geographique,
+        cached_libelle: schema.organizations.cached_libelle,
+        created_at: schema.organizations.created_at,
+        external_authorized_email_domains:
+          schema.organizations.external_authorized_email_domains,
+        id: schema.organizations.id,
+        siret: schema.organizations.siret,
+        verified_email_domains: schema.organizations.verified_email_domains,
+      })
       .from(schema.organizations)
       .where(where)
       .orderBy(desc(schema.organizations.created_at))
@@ -37,3 +48,7 @@ export function get_organizations_list(
     return { organizations, count };
   });
 }
+
+export type get_organizations_list_dto = ReturnType<
+  typeof get_organizations_list
+>;
