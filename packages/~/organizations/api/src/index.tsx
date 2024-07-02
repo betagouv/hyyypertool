@@ -7,6 +7,7 @@ import type { App_Context } from "@~/app.middleware/context";
 import { Hono } from "hono";
 import { jsxRenderer } from "hono/jsx-renderer";
 import user_page_route from "./:id/index";
+import domains_router from "./domaines";
 import leaders_router from "./leaders";
 import Organizations_Page, {
   SEARCH_SIRET_INPUT_ID,
@@ -17,6 +18,7 @@ import Organizations_Page, {
 
 export default new Hono<App_Context>()
   .route("/leaders", leaders_router)
+  .route("/domains", domains_router)
   .route("/:id", user_page_route)
   .use("/", jsxRenderer(Main_Layout))
   .get(
