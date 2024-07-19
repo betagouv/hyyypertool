@@ -8,8 +8,17 @@ import { z } from "zod";
 
 //
 
+// TODO(douglasduteil): Mith want to use https://www.npmjs.com/package/dotenv-flow
+// This dotenv config is similar to dotenv-flow ...
 dotenv.config({
-  path: [`.env.${process.env.NODE_ENV}.local`, ".env.local", ".env"],
+  path: [
+    `.env.${process.env["DOT_ENV"]}.local`,
+    `.env.${process.env["DOT_ENV"]}`,
+    `.env.${process.env["NODE_ENV"]}.local`,
+    `.env.${process.env["NODE_ENV"]}`,
+    ".env.local",
+    ".env",
+  ],
 });
 
 const pkg = await import(join(cwd(), "package.json"));

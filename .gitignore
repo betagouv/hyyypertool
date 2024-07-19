@@ -3,7 +3,7 @@
 node_modules/
 
 #
-.env.*.local
+.env*.local
 
 # Generated style
 public/built

@@ -25,3 +25,9 @@ docker compose exec -T postgres-moncomptepro pg_restore --clean --no-owner --dbn
 Then run the app: `bun run dev`.
 
 Then go to http://localhost:3000/.
+
+## With local moncomptepro
+
+```sh
+$ DOT_ENV=mcp bun run dev
+```
